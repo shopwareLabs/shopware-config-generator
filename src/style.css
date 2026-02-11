@@ -1,0 +1,54 @@
+:root {
+  /* Syntax highlighting - YAML */
+  --color-yaml-key: #7dd3fc;
+  --color-yaml-string: #fde68a;
+  --color-yaml-number: #c4b5fd;
+  --color-yaml-bool: #f472b6;
+  --color-yaml-comment: #6b7280;
+  /* Syntax highlighting - ENV */
+  --color-env-var: #fb923c;
+  --color-env-value: #86efac;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #app {
+  height: 100%;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f5;
+  color: #1a1a1a;
+}
+
+.yaml-key {
+  color: var(--color-yaml-key);
+}
+
+.yaml-string {
+  color: var(--color-yaml-string);
+}
+
+.yaml-number {
+  color: var(--color-yaml-number);
+}
+
+.yaml-bool {
+  color: var(--color-yaml-bool);
+}
+
+.yaml-comment {
+  color: var(--color-yaml-comment);
+}
+
+.env-var {
+  color: var(--color-env-var);
+}
+
+.env-value {
+  color: var(--color-env-value);
+}

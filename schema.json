@@ -1,0 +1,882 @@
+{
+  "sections": [
+    {
+      "id": "core",
+      "title": "Core Settings",
+      "description": "Configure essential Shopware settings like environment, URLs, and secrets.",
+      "icon": "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+      "category": "Application",
+      "groups": [
+        {
+          "title": "Environment",
+          "fields": [
+            {
+              "key": "appEnv",
+              "type": "select",
+              "label": "Environment",
+              "default": "prod",
+              "hint": "Application environment (prod, dev, staging)",
+              "options": [
+                { "value": "prod", "label": "Production" },
+                { "value": "dev", "label": "Development" },
+                { "value": "staging", "label": "Staging" },
+                { "value": "test", "label": "Test" }
+              ],
+              "env": { "key": "APP_ENV", "always": true }
+            },
+            {
+              "key": "appUrl",
+              "type": "text",
+              "label": "App URL",
+              "default": "",
+              "hint": "The public URL where Shopware is accessible",
+              "placeholder": "https://your-shop.com",
+              "env": { "key": "APP_URL" }
+            }
+          ]
+        },
+        {
+          "title": "Security Keys",
+          "fields": [
+            {
+              "key": "appSecret",
+              "type": "text",
+              "label": "App Secret",
+              "default": "",
+              "hint": "Secret key for encryption. Generate with: openssl rand -hex 32",
+              "placeholder": "your-secret-key",
+              "env": { "key": "APP_SECRET" }
+            },
+            {
+              "key": "instanceId",
+              "type": "text",
+              "label": "Instance ID",
+              "default": "",
+              "hint": "Unique store identifier. Generate with: openssl rand -hex 32",
+              "placeholder": "your-instance-id",
+              "env": { "key": "INSTANCE_ID" }
+            },
+            {
+              "key": "jwtPrivateKey",
+              "type": "textarea",
+              "label": "JWT Private Key",
+              "default": "",
+              "hint": "Generate with: shopware-cli project generate-jwt --env",
+              "placeholder": "-----BEGIN PRIVATE KEY-----",
+              "env": { "key": "JWT_PRIVATE_KEY" }
+            },
+            {
+              "key": "jwtPublicKey",
+              "type": "textarea",
+              "label": "JWT Public Key",
+              "default": "",
+              "placeholder": "-----BEGIN PUBLIC KEY-----",
+              "env": { "key": "JWT_PUBLIC_KEY" }
+            }
+          ]
+        },
+        {
+          "title": "Administration",
+          "fields": [
+            {
+              "key": "adminPathName",
+              "type": "text",
+              "label": "Admin Path",
+              "default": "admin",
+              "hint": "Custom path for administration interface",
+              "placeholder": "admin",
+              "env": { "key": "SHOPWARE_ADMINISTRATION_PATH_NAME", "omitDefault": true }
+            },
+            {
+              "key": "disableUpdateCheck",
+              "type": "toggle",
+              "label": "Disable Update Check",
+              "description": "Disable automatic update checks in administration",
+              "default": false,
+              "env": { "key": "SHOPWARE_DISABLE_UPDATE_CHECK", "format": "boolToFlag" }
+            },
+            {
+              "key": "enableStockManagement",
+              "type": "toggle",
+              "label": "Enable Stock Management",
+              "description": "Enable the stock management system",
+              "default": true,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.stock.enable_stock_management", "when": { "field": "enableStockManagement", "eq": false } }
+            },
+            {
+              "key": "htmlSanitizerEnabled",
+              "type": "toggle",
+              "label": "HTML Sanitizer",
+              "description": "Sanitize HTML content for security",
+              "default": true,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.html_sanitizer.enabled", "when": { "field": "htmlSanitizerEnabled", "eq": false } }
+            }
+          ]
+        },
+        {
+          "title": "Mailer",
+          "fields": [
+            {
+              "key": "mailerDsn",
+              "type": "text",
+              "label": "Mailer DSN",
+              "default": "null://localhost",
+              "hint": "Mail transport DSN (e.g., smtp://user:pass@smtp.example.com:587)",
+              "placeholder": "null://localhost",
+              "env": { "key": "MAILER_DSN", "omitDefault": true }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "database",
+      "title": "Database",
+      "description": "Configure database connection, SSL, and advanced database options.",
+      "icon": "M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4",
+      "category": "Application",
+      "groups": [
+        {
+          "title": "Connection",
+          "fields": [
+            {
+              "key": "databaseUrl",
+              "type": "text",
+              "label": "Database URL",
+              "default": "",
+              "hint": "MySQL connection DSN",
+              "placeholder": "mysql://user:password@localhost:3306/shopware",
+              "env": { "key": "DATABASE_URL" }
+            },
+            {
+              "key": "blueGreenDeployment",
+              "type": "toggle",
+              "label": "Blue-Green Deployment",
+              "description": "Enable blue-green deployment (requires super privilege for triggers)",
+              "default": false,
+              "env": { "key": "BLUE_GREEN_DEPLOYMENT", "format": "boolToFlag" }
+            },
+            {
+              "key": "dbalTimezoneSupport",
+              "type": "toggle",
+              "label": "Timezone Support",
+              "description": "Enable timezone support in DBAL",
+              "default": false,
+              "env": { "key": "SHOPWARE_DBAL_TIMEZONE_SUPPORT_ENABLED", "format": "boolToFlag" }
+            }
+          ]
+        },
+        {
+          "title": "SSL Configuration",
+          "fields": [
+            {
+              "key": "databaseSslCa",
+              "type": "text",
+              "label": "SSL CA Certificate",
+              "default": "",
+              "hint": "Path to SSL CA certificate file",
+              "placeholder": "/path/to/ca-cert.pem",
+              "env": { "key": "DATABASE_SSL_CA" }
+            },
+            {
+              "key": "databaseSslCert",
+              "type": "text",
+              "label": "SSL Certificate",
+              "default": "",
+              "hint": "Path to SSL certificate file",
+              "placeholder": "/path/to/client-cert.pem",
+              "env": { "key": "DATABASE_SSL_CERT" }
+            },
+            {
+              "key": "databaseSslKey",
+              "type": "text",
+              "label": "SSL Key",
+              "default": "",
+              "hint": "Path to SSL key file",
+              "placeholder": "/path/to/client-key.pem",
+              "env": { "key": "DATABASE_SSL_KEY" }
+            },
+            {
+              "key": "databaseSslDontVerify",
+              "type": "toggle",
+              "label": "Skip SSL Verification",
+              "description": "Disable server certificate verification (not recommended for production)",
+              "default": false,
+              "env": { "key": "DATABASE_SSL_DONT_VERIFY_SERVER_CERT", "format": "boolToFlag" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cache",
+      "title": "Cache & HTTP",
+      "description": "Configure HTTP cache, Redis caching, and lock mechanisms.",
+      "icon": "M13 10V3L4 14h7v7l9-11h-7z",
+      "category": "Application",
+      "groups": [
+        {
+          "title": "HTTP Cache",
+          "fields": [
+            {
+              "key": "httpCacheEnabled",
+              "type": "toggle",
+              "label": "Enable HTTP Cache",
+              "description": "Enable HTTP caching for better performance",
+              "default": true,
+              "env": { "key": "SHOPWARE_HTTP_CACHE_ENABLED", "format": "boolToFlag", "always": true }
+            },
+            {
+              "key": "httpDefaultTtl",
+              "type": "number",
+              "label": "Default TTL",
+              "default": 7200,
+              "hint": "Default cache time-to-live in seconds",
+              "min": 0,
+              "env": { "key": "SHOPWARE_HTTP_DEFAULT_TTL", "omitDefault": true }
+            }
+          ]
+        },
+        {
+          "title": "Redis",
+          "fields": [
+            {
+              "key": "redisUrl",
+              "type": "text",
+              "label": "Redis URL",
+              "default": "",
+              "hint": "Redis connection URL for caching and sessions",
+              "placeholder": "redis://localhost:6379",
+              "env": { "key": "REDIS_URL" },
+              "infra": {
+                "id": "redis",
+                "label": "Redis",
+                "icon": "M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z",
+                "color": "#ef4444",
+                "category": "cache",
+                "connectionLabel": "Cache",
+                "when": { "field": "redisUrl", "notEmpty": true }
+              }
+            },
+            {
+              "key": "redisPrefix",
+              "type": "text",
+              "label": "Redis Prefix",
+              "default": "",
+              "hint": "Prefix for all Redis keys",
+              "placeholder": "sw_",
+              "env": { "key": "REDIS_PREFIX" }
+            }
+          ]
+        },
+        {
+          "title": "Locking",
+          "fields": [
+            {
+              "key": "lockDsn",
+              "type": "select",
+              "label": "Lock DSN",
+              "default": "flock",
+              "hint": "DSN for Symfony locking mechanism",
+              "options": [
+                { "value": "flock", "label": "File Lock (flock)" },
+                { "value": "semaphore", "label": "Semaphore" },
+                { "value": "redis://localhost:6379", "label": "Redis" }
+              ],
+              "env": { "key": "LOCK_DSN", "omitDefault": true }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "elasticsearch",
+      "title": "Elasticsearch / OpenSearch",
+      "description": "Configure search engine for storefront and administration.",
+      "icon": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+      "category": "Services",
+      "groups": [
+        {
+          "title": "Storefront Search",
+          "fields": [
+            {
+              "key": "esEnabled",
+              "type": "toggle",
+              "label": "Enable Elasticsearch",
+              "description": "Use Elasticsearch/OpenSearch for storefront search",
+              "default": false,
+              "env": { "key": "SHOPWARE_ES_ENABLED", "format": "boolToFlag" },
+              "infra": {
+                "id": "elasticsearch",
+                "label": "Elasticsearch",
+                "icon": "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
+                "color": "#10b981",
+                "category": "search",
+                "connectionLabel": "Search",
+                "when": { "or": [{ "field": "esEnabled", "eq": true }, { "field": "adminEsEnabled", "eq": true }] }
+              }
+            },
+            {
+              "key": "esUrl",
+              "type": "text",
+              "label": "OpenSearch URL",
+              "default": "",
+              "hint": "URL to your OpenSearch/Elasticsearch cluster",
+              "placeholder": "http://localhost:9200",
+              "showWhen": "esEnabled",
+              "env": { "key": "OPENSEARCH_URL", "when": "esEnabled" }
+            },
+            {
+              "key": "esIndexPrefix",
+              "type": "text",
+              "label": "Index Prefix",
+              "default": "sw",
+              "hint": "Prefix for Elasticsearch indices",
+              "placeholder": "sw",
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_INDEX_PREFIX", "omitDefault": true, "when": "esEnabled" }
+            },
+            {
+              "key": "esIndexingEnabled",
+              "type": "toggle",
+              "label": "Enable Indexing",
+              "description": "Enable automatic indexing to Elasticsearch",
+              "default": false,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_INDEXING_ENABLED", "format": "boolToFlag", "when": "esEnabled" }
+            },
+            {
+              "key": "esIndexingBatchSize",
+              "type": "number",
+              "label": "Indexing Batch Size",
+              "default": 100,
+              "hint": "Number of entities to index per batch",
+              "min": 1,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_INDEXING_BATCH_SIZE", "omitDefault": true, "when": "esEnabled" }
+            },
+            {
+              "key": "esThrowException",
+              "type": "toggle",
+              "label": "Throw Exceptions",
+              "description": "Throw exceptions on Elasticsearch errors",
+              "default": true,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_THROW_EXCEPTION", "format": "boolToFlag", "always": true, "when": "esEnabled" }
+            },
+            {
+              "key": "esUseLanguageAnalyzer",
+              "type": "toggle",
+              "label": "Language Analyzer",
+              "description": "Use language-specific analyzers for fuzzy search",
+              "default": true,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_USE_LANGUAGE_ANALYZER", "format": "boolToFlag", "always": true, "when": "esEnabled" }
+            },
+            {
+              "key": "esExcludeSource",
+              "type": "toggle",
+              "label": "Exclude Source",
+              "description": "Exclude _source field from stored documents",
+              "default": false,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_EXCLUDE_SOURCE", "format": "boolToFlag", "when": "esEnabled" }
+            },
+            {
+              "key": "esNgramMinGram",
+              "type": "number",
+              "label": "Min N-gram",
+              "default": 4,
+              "hint": "Minimum n-gram size",
+              "min": 1,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_NGRAM_MIN_GRAM", "omitDefault": true, "when": "esEnabled" }
+            },
+            {
+              "key": "esNgramMaxGram",
+              "type": "number",
+              "label": "Max N-gram",
+              "default": 5,
+              "hint": "Maximum n-gram size",
+              "min": 1,
+              "showWhen": "esEnabled",
+              "env": { "key": "SHOPWARE_ES_NGRAM_MAX_GRAM", "omitDefault": true, "when": "esEnabled" }
+            }
+          ]
+        },
+        {
+          "title": "Administration Search",
+          "fields": [
+            {
+              "key": "adminEsEnabled",
+              "type": "toggle",
+              "label": "Enable Admin Elasticsearch",
+              "description": "Use Elasticsearch for administration search",
+              "default": false,
+              "env": { "key": "SHOPWARE_ADMIN_ES_ENABLED", "format": "boolToFlag" }
+            },
+            {
+              "key": "adminEsUrl",
+              "type": "text",
+              "label": "Admin OpenSearch URL",
+              "default": "",
+              "hint": "URL for admin Elasticsearch (can differ from storefront)",
+              "placeholder": "http://localhost:9200",
+              "showWhen": "adminEsEnabled",
+              "env": { "key": "ADMIN_OPENSEARCH_URL", "when": "adminEsEnabled" }
+            },
+            {
+              "key": "adminEsIndexPrefix",
+              "type": "text",
+              "label": "Admin Index Prefix",
+              "default": "sw-admin",
+              "hint": "Prefix for admin indices",
+              "placeholder": "sw-admin",
+              "showWhen": "adminEsEnabled",
+              "env": { "key": "SHOPWARE_ADMIN_ES_INDEX_PREFIX", "omitDefault": true, "when": "adminEsEnabled" }
+            },
+            {
+              "key": "adminEsRefreshIndices",
+              "type": "toggle",
+              "label": "Refresh Indices",
+              "description": "Refresh admin indices after writes",
+              "default": false,
+              "showWhen": "adminEsEnabled",
+              "env": { "key": "SHOPWARE_ADMIN_ES_REFRESH_INDICES", "format": "boolToFlag", "when": "adminEsEnabled" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "messenger",
+      "title": "Queue / Messenger",
+      "description": "Configure async message processing with RabbitMQ, Redis, or other transports.",
+      "icon": "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+      "category": "Services",
+      "groups": [
+        {
+          "title": "Message Transport",
+          "fields": [
+            {
+              "key": "messengerTransportDsn",
+              "type": "text",
+              "label": "Default Transport DSN",
+              "default": "",
+              "hint": "DSN for the default async queue",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/default",
+              "env": { "key": "MESSENGER_TRANSPORT_DSN" },
+              "infra": {
+                "id": "queue",
+                "label": { "match": [
+                  { "when": { "field": "messengerTransportDsn", "startsWith": "amqp" }, "value": "RabbitMQ" },
+                  { "when": { "field": "messengerTransportDsn", "startsWith": "redis" }, "value": "Redis Queue" },
+                  { "default": "Message Queue" }
+                ]},
+                "icon": "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10",
+                "color": "#f97316",
+                "category": "queue",
+                "connectionLabel": "Async",
+                "dashed": true,
+                "when": { "field": "messengerTransportDsn", "notEmpty": true }
+              }
+            }
+          ]
+        },
+        {
+          "title": "Additional Queues",
+          "fields": [
+            {
+              "key": "messengerTransportFailureDsn",
+              "type": "text",
+              "label": "Failure Transport DSN",
+              "default": "",
+              "hint": "Queue for failed messages (dead letter queue)",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/failure",
+              "env": { "key": "MESSENGER_TRANSPORT_FAILURE_DSN" }
+            },
+            {
+              "key": "messengerTransportLowPriorityDsn",
+              "type": "text",
+              "label": "Low Priority Transport DSN",
+              "default": "",
+              "hint": "Queue for low priority background tasks",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/low_prio",
+              "env": { "key": "MESSENGER_TRANSPORT_LOW_PRIORITY_DSN" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "title": "Session & Security",
+      "description": "Configure session handling, cookies, and security settings.",
+      "icon": "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
+      "category": "Services",
+      "groups": [
+        {
+          "title": "Cookie Settings",
+          "fields": [
+            {
+              "key": "sessionCookieSecure",
+              "type": "select",
+              "label": "Cookie Secure",
+              "default": "auto",
+              "hint": "When to send cookies only over HTTPS",
+              "options": [
+                { "value": "auto", "label": "Auto (detect based on request)" },
+                { "value": "true", "label": "Always (HTTPS only)" },
+                { "value": "false", "label": "Never (HTTP and HTTPS)" }
+              ],
+              "yaml": { "file": "framework.yaml", "path": "framework.session.cookie_secure", "when": { "or": [{ "field": "sessionCookieSecure", "neq": "auto" }, { "field": "sessionCookieSamesite", "neq": "lax" }] } }
+            },
+            {
+              "key": "sessionCookieSamesite",
+              "type": "select",
+              "label": "Cookie SameSite",
+              "default": "lax",
+              "hint": "SameSite cookie protection level",
+              "options": [
+                { "value": "lax", "label": "Lax (Recommended)" },
+                { "value": "strict", "label": "Strict" },
+                { "value": "none", "label": "None" },
+                { "value": "", "label": "Disabled" }
+              ],
+              "yaml": { "file": "framework.yaml", "path": "framework.session.cookie_samesite", "when": { "or": [{ "field": "sessionCookieSecure", "neq": "auto" }, { "field": "sessionCookieSamesite", "neq": "lax" }] } }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "staging",
+      "title": "Staging Mode",
+      "description": "Configure staging environment with domain rewrites and safety features.",
+      "icon": "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z",
+      "category": "Environment",
+      "groups": [
+        {
+          "title": "Staging Mode",
+          "fields": [
+            {
+              "key": "stagingEnabled",
+              "type": "toggle",
+              "label": "Enable Staging Mode",
+              "description": "Activate staging environment features",
+              "default": false
+            }
+          ]
+        },
+        {
+          "title": "Safety Features",
+          "showWhen": "stagingEnabled",
+          "fields": [
+            {
+              "key": "stagingDisableMailDelivery",
+              "type": "toggle",
+              "label": "Disable Mail Delivery",
+              "description": "Prevent sending real emails from staging environment",
+              "default": true,
+              "yaml": { "file": "staging.yaml", "path": "shopware.staging.mailing.disable_delivery", "when": "stagingEnabled" }
+            },
+            {
+              "key": "stagingShowStorefrontBanner",
+              "type": "toggle",
+              "label": "Storefront Banner",
+              "description": "Show 'Staging' banner on storefront",
+              "default": true,
+              "yaml": { "file": "staging.yaml", "path": "shopware.staging.storefront.show_banner", "when": "stagingEnabled" }
+            },
+            {
+              "key": "stagingShowAdminBanner",
+              "type": "toggle",
+              "label": "Administration Banner",
+              "description": "Show 'Staging' banner in administration",
+              "default": true,
+              "yaml": { "file": "staging.yaml", "path": "shopware.staging.administration.show_banner", "when": "stagingEnabled" }
+            },
+            {
+              "key": "stagingEsCheckExistence",
+              "type": "toggle",
+              "label": "Elasticsearch Check",
+              "description": "Check if Elasticsearch indices exist before operations",
+              "default": true,
+              "yaml": { "file": "staging.yaml", "path": "shopware.staging.elasticsearch.check_for_existence", "when": "stagingEnabled" }
+            }
+          ]
+        },
+        {
+          "title": "Domain Rewrites",
+          "showWhen": "stagingEnabled",
+          "fields": [
+            {
+              "key": "stagingDomainRewrites",
+              "type": "domain-rewrites",
+              "label": "Domain Rewrites",
+              "default": [],
+              "hint": "Rewrite production domains to staging domains in database content.",
+              "yaml": { "file": "staging.yaml", "path": "shopware.staging.sales_channel.domain_rewrite", "when": "stagingEnabled" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "logging",
+      "title": "Logging",
+      "description": "Configure Monolog logging handlers and levels.",
+      "icon": "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      "category": "Observability",
+      "groups": [
+        {
+          "title": "Monolog Configuration",
+          "fields": [
+            {
+              "key": "loggingEnabled",
+              "type": "toggle",
+              "label": "Enable Custom Logging",
+              "description": "Configure custom Monolog logging handlers",
+              "default": false
+            }
+          ]
+        },
+        {
+          "title": "Log Settings",
+          "showWhen": "loggingEnabled",
+          "fields": [
+            {
+              "key": "loggingLevel",
+              "type": "select",
+              "label": "Log Level",
+              "default": "error",
+              "hint": "Minimum log level to capture",
+              "options": [
+                { "value": "debug", "label": "Debug" },
+                { "value": "info", "label": "Info" },
+                { "value": "notice", "label": "Notice" },
+                { "value": "warning", "label": "Warning" },
+                { "value": "error", "label": "Error" },
+                { "value": "critical", "label": "Critical" },
+                { "value": "alert", "label": "Alert" },
+                { "value": "emergency", "label": "Emergency" }
+              ],
+              "yaml": [
+                { "file": "monolog.yaml", "path": "monolog.handlers.main.action_level", "when": "loggingEnabled" },
+                { "file": "monolog.yaml", "path": "monolog.handlers.nested.level", "when": "loggingEnabled" }
+              ]
+            },
+            {
+              "key": "loggingBufferSize",
+              "type": "number",
+              "label": "Buffer Size",
+              "default": 30,
+              "hint": "Number of messages to buffer before flushing",
+              "min": 1,
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.main.buffer_size", "when": "loggingEnabled" }
+            }
+          ]
+        },
+        {
+          "title": "Excluded HTTP Codes",
+          "showWhen": "loggingEnabled",
+          "fields": [
+            {
+              "key": "loggingExcludedHttpCodes",
+              "type": "tags",
+              "label": "Excluded HTTP Codes",
+              "default": [404, 405],
+              "hint": "HTTP status codes that should not trigger error logging.",
+              "placeholder": "404",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.main.excluded_http_codes", "when": "loggingEnabled" }
+            }
+          ]
+        },
+        {
+          "title": "_monolog_hidden",
+          "showWhen": "loggingEnabled",
+          "fields": [
+            {
+              "key": "_monologMainType",
+              "type": "hidden",
+              "label": "",
+              "default": "fingers_crossed",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.main.type", "when": "loggingEnabled", "value": "fingers_crossed" }
+            },
+            {
+              "key": "_monologMainHandler",
+              "type": "hidden",
+              "label": "",
+              "default": "nested",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.main.handler", "when": "loggingEnabled", "value": "nested" }
+            },
+            {
+              "key": "_monologNestedType",
+              "type": "hidden",
+              "label": "",
+              "default": "rotating_file",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.nested.type", "when": "loggingEnabled", "value": "rotating_file" }
+            },
+            {
+              "key": "_monologNestedPath",
+              "type": "hidden",
+              "label": "",
+              "default": "%kernel.logs_dir%/%kernel.environment%.log",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.nested.path", "when": "loggingEnabled", "value": "%kernel.logs_dir%/%kernel.environment%.log" }
+            },
+            {
+              "key": "_monologConsoleType",
+              "type": "hidden",
+              "label": "",
+              "default": "console",
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.console.type", "when": "loggingEnabled", "value": "console" }
+            },
+            {
+              "key": "_monologConsolePsr3",
+              "type": "hidden",
+              "label": "",
+              "default": false,
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.console.process_psr_3_messages", "when": "loggingEnabled", "value": false }
+            },
+            {
+              "key": "_monologConsoleChannels",
+              "type": "hidden",
+              "label": "",
+              "default": ["!event", "!doctrine"],
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.console.channels", "when": "loggingEnabled", "value": ["!event", "!doctrine"] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "profiler",
+      "title": "Profiler & Tracing",
+      "description": "Configure profiling integrations and OpenTelemetry for observability.",
+      "icon": "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+      "category": "Observability",
+      "groups": [
+        {
+          "title": "Profiler",
+          "fields": [
+            {
+              "key": "profilerEnabled",
+              "type": "toggle",
+              "label": "Enable Profiler",
+              "description": "Enable profiling integrations (development/staging only)",
+              "default": false
+            },
+            {
+              "key": "profilerIntegrations",
+              "type": "checklist",
+              "label": "Integrations",
+              "default": ["Symfony"],
+              "showWhen": "profilerEnabled",
+              "options": [
+                { "value": "Symfony", "label": "Symfony Profiler", "description": "Built-in Symfony profiler bar" },
+                { "value": "Datadog", "label": "Datadog", "description": "Requires dd-trace PHP extension" },
+                { "value": "Tideways", "label": "Tideways", "description": "Requires tideways PHP extension" },
+                { "value": "OpenTelemetry", "label": "OpenTelemetry", "description": "Requires opentelemetry PHP extension" }
+              ],
+              "yaml": { "file": "shopware.yaml", "path": "shopware.profiler.integrations", "when": { "field": "profilerEnabled", "eq": true } }
+            }
+          ]
+        },
+        {
+          "title": "OpenTelemetry",
+          "fields": [
+            {
+              "key": "otelEnabled",
+              "type": "toggle",
+              "label": "Enable OpenTelemetry",
+              "description": "Enable OpenTelemetry instrumentation",
+              "default": false,
+              "env": { "key": "OTEL_PHP_AUTOLOAD_ENABLED", "static": "true" },
+              "infra": {
+                "id": "otel",
+                "label": "OTel Collector",
+                "icon": "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+                "color": "#8b5cf6",
+                "category": "monitoring",
+                "connectionLabel": "Traces",
+                "dashed": true
+              }
+            },
+            {
+              "key": "otelServiceName",
+              "type": "text",
+              "label": "Service Name",
+              "default": "shopware",
+              "hint": "Name of your service in traces",
+              "placeholder": "shopware",
+              "showWhen": "otelEnabled",
+              "env": { "key": "OTEL_SERVICE_NAME", "when": "otelEnabled", "always": true }
+            },
+            {
+              "key": "otelTracesExporter",
+              "type": "select",
+              "label": "Traces Exporter",
+              "default": "otlp",
+              "showWhen": "otelEnabled",
+              "options": [
+                { "value": "otlp", "label": "OTLP" },
+                { "value": "console", "label": "Console" },
+                { "value": "none", "label": "None" }
+              ],
+              "env": { "key": "OTEL_TRACES_EXPORTER", "when": "otelEnabled", "always": true }
+            },
+            {
+              "key": "otelLogsExporter",
+              "type": "select",
+              "label": "Logs Exporter",
+              "default": "otlp",
+              "showWhen": "otelEnabled",
+              "options": [
+                { "value": "otlp", "label": "OTLP" },
+                { "value": "console", "label": "Console" },
+                { "value": "none", "label": "None" }
+              ],
+              "env": { "key": "OTEL_LOGS_EXPORTER", "when": "otelEnabled", "always": true }
+            },
+            {
+              "key": "otelMetricsExporter",
+              "type": "select",
+              "label": "Metrics Exporter",
+              "default": "otlp",
+              "showWhen": "otelEnabled",
+              "options": [
+                { "value": "otlp", "label": "OTLP" },
+                { "value": "console", "label": "Console" },
+                { "value": "none", "label": "None" }
+              ],
+              "env": { "key": "OTEL_METRICS_EXPORTER", "when": "otelEnabled", "always": true }
+            },
+            {
+              "key": "otelExporterProtocol",
+              "type": "select",
+              "label": "Exporter Protocol",
+              "default": "grpc",
+              "showWhen": "otelEnabled",
+              "options": [
+                { "value": "grpc", "label": "gRPC" },
+                { "value": "http/protobuf", "label": "HTTP/Protobuf" },
+                { "value": "http/json", "label": "HTTP/JSON" }
+              ],
+              "env": { "key": "OTEL_EXPORTER_OTLP_PROTOCOL", "when": "otelEnabled", "always": true }
+            },
+            {
+              "key": "otelExporterEndpoint",
+              "type": "text",
+              "label": "Exporter Endpoint",
+              "default": "http://localhost:4317",
+              "hint": "OTLP collector endpoint",
+              "placeholder": "http://localhost:4317",
+              "showWhen": "otelEnabled",
+              "env": { "key": "OTEL_EXPORTER_OTLP_ENDPOINT", "when": "otelEnabled", "always": true }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
