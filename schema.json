@@ -45,33 +45,10 @@
               "default": "",
               "hint": "Secret key for encryption. Generate with: openssl rand -hex 32",
               "placeholder": "your-secret-key",
+              "generators": [
+                { "type": "randomHex", "label": "Generate", "length": 64 }
+              ],
               "env": { "key": "APP_SECRET" }
-            },
-            {
-              "key": "instanceId",
-              "type": "text",
-              "label": "Instance ID",
-              "default": "",
-              "hint": "Unique store identifier. Generate with: openssl rand -hex 32",
-              "placeholder": "your-instance-id",
-              "env": { "key": "INSTANCE_ID" }
-            },
-            {
-              "key": "jwtPrivateKey",
-              "type": "textarea",
-              "label": "JWT Private Key",
-              "default": "",
-              "hint": "Generate with: shopware-cli project generate-jwt --env",
-              "placeholder": "-----BEGIN PRIVATE KEY-----",
-              "env": { "key": "JWT_PRIVATE_KEY" }
-            },
-            {
-              "key": "jwtPublicKey",
-              "type": "textarea",
-              "label": "JWT Public Key",
-              "default": "",
-              "placeholder": "-----BEGIN PUBLIC KEY-----",
-              "env": { "key": "JWT_PUBLIC_KEY" }
             }
           ]
         },

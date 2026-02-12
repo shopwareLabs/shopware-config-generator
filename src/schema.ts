@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { parseAllDocuments } from 'yaml'
 import schemaData from '../schema.json'
 import { config, getShareableUrl } from './config'
 
@@ -55,6 +56,12 @@ export interface InfraRule {
   when?: ConditionOrString
 }
 
+export interface FieldGenerator {
+  type: 'randomHex'
+  label?: string
+  length?: number
+}
+
 export interface Field {
   key: string
   type: 'text' | 'number' | 'select' | 'toggle' | 'textarea' | 'checklist' | 'tags' | 'domain-rewrites' | 'hidden'
@@ -69,6 +76,7 @@ export interface Field {
   env?: EnvRule
   yaml?: YamlRule | YamlRule[]
   infra?: InfraRule
+  generators?: FieldGenerator[]
 }
 
 export interface Group {
@@ -165,6 +173,273 @@ function allFields(): Field[] {
     }
   }
   return fields
+}
+
+function basename(input: string): string {
+  const parts = input.split(/[\\/]/)
+  return (parts[parts.length - 1] || input).toLowerCase()
+}
+
+function getNestedValue(obj: Record<string, any>, path: string): any {
+  const parts = path.split('.')
+  let current: any = obj
+
+  for (const part of parts) {
+    if (current === null || current === undefined || typeof current !== 'object') {
+      return undefined
+    }
+    current = current[part]
+  }
+
+  return current
+}
+
+function coerceImportedValue(value: unknown, field: Field): any {
+  if (field.type === 'toggle') {
+    if (typeof value === 'boolean') return value
+    if (typeof value === 'number') return value !== 0
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase()
+      if (normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on') return true
+      if (normalized === '0' || normalized === 'false' || normalized === 'no' || normalized === 'off') return false
+    }
+    return undefined
+  }
+
+  if (field.type === 'number') {
+    if (typeof value === 'number' && Number.isFinite(value)) return value
+    if (typeof value === 'string' && value.trim() !== '') {
+      const parsed = Number(value)
+      if (Number.isFinite(parsed)) return parsed
+    }
+    return undefined
+  }
+
+  if (field.type === 'tags') {
+    if (!Array.isArray(value)) return undefined
+    const numbers = value
+      .map(v => (typeof v === 'number' ? v : Number(v)))
+      .filter(v => Number.isFinite(v))
+    return numbers
+  }
+
+  if (field.type === 'checklist') {
+    if (!Array.isArray(value)) return undefined
+    return value.map(v => String(v))
+  }
+
+  if (field.type === 'domain-rewrites') {
+    if (!Array.isArray(value)) return undefined
+    return value
+      .map(item => {
+        if (!item || typeof item !== 'object') return null
+        const source = item as Record<string, unknown>
+        return {
+          type: String(source.type ?? 'equal'),
+          match: String(source.match ?? ''),
+          replace: String(source.replace ?? ''),
+        }
+      })
+      .filter(Boolean)
+  }
+
+  if (value === null || value === undefined) return ''
+  return String(value)
+}
+
+function parseYamlObject(content: string): Record<string, any> {
+  const docs = parseAllDocuments(content)
+  const errors = docs.flatMap(doc => doc.errors)
+
+  if (errors.length > 0) {
+    throw new Error(errors[0]?.message || 'Invalid YAML')
+  }
+
+  for (const doc of docs) {
+    const json = doc.toJSON()
+    if (json && typeof json === 'object' && !Array.isArray(json)) {
+      return json as Record<string, any>
+    }
+  }
+
+  return {}
+}
+
+function getYamlSearchRoots(imported: Record<string, any>): Record<string, any>[] {
+  const roots: Record<string, any>[] = [imported]
+
+  for (const [key, value] of Object.entries(imported)) {
+    if (!key.startsWith('when@')) continue
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue
+    roots.push(value as Record<string, any>)
+  }
+
+  return roots
+}
+
+function getImportedValueForPath(roots: Record<string, any>[], path: string): any {
+  for (const root of roots) {
+    const value = getNestedValue(root, path)
+    if (value !== undefined) return value
+  }
+
+  return undefined
+}
+
+export interface ImportYamlResult {
+  updatedKeys: string[]
+}
+
+function parseBooleanLike(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on') return true
+    if (normalized === '0' || normalized === 'false' || normalized === 'no' || normalized === 'off') return false
+  }
+  return undefined
+}
+
+function parseEnvValue(raw: string): string {
+  const trimmed = raw.trim()
+  if (trimmed.length === 0) return ''
+
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    const quote = trimmed[0]
+    const inner = trimmed.slice(1, -1)
+    if (quote === "'") {
+      return inner
+    }
+    return inner
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t')
+      .replace(/\\"/g, '"')
+      .replace(/\\\\/g, '\\')
+  }
+
+  return trimmed.replace(/\s+#.*$/, '').trim()
+}
+
+function parseEnvObject(content: string): Record<string, string> {
+  const result: Record<string, string> = {}
+  const lines = content.split(/\r?\n/)
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!trimmed || trimmed.startsWith('#')) continue
+
+    const withoutExport = trimmed.startsWith('export ') ? trimmed.slice(7).trim() : trimmed
+    const index = withoutExport.indexOf('=')
+    if (index <= 0) continue
+
+    const key = withoutExport.slice(0, index).trim()
+    if (!key) continue
+    const value = withoutExport.slice(index + 1)
+    result[key] = parseEnvValue(value)
+  }
+
+  return result
+}
+
+export function importYamlToConfig(content: string, filename?: string): ImportYamlResult {
+  const imported = parseYamlObject(content)
+  const yamlRoots = getYamlSearchRoots(imported)
+  const normalizedFilename = filename ? basename(filename) : ''
+  const fields = allFields()
+  const hasMatchingRules = normalizedFilename
+    ? fields.some(field => {
+      if (!field.yaml) return false
+      const rules = Array.isArray(field.yaml) ? field.yaml : [field.yaml]
+      return rules.some(rule => basename(rule.file) === normalizedFilename)
+    })
+    : false
+  const updates: Record<string, any> = {}
+  const updatedKeys = new Set<string>()
+
+  for (const field of fields) {
+    if (!field.yaml || field.key.startsWith('_')) continue
+
+    const rules = Array.isArray(field.yaml) ? field.yaml : [field.yaml]
+
+    for (const rule of rules) {
+      if (hasMatchingRules && basename(rule.file) !== normalizedFilename) {
+        continue
+      }
+
+      const importedValue = getImportedValueForPath(yamlRoots, rule.path)
+      if (importedValue === undefined) continue
+
+      if (rule.value !== undefined) {
+        if (JSON.stringify(importedValue) === JSON.stringify(rule.value) && field.type === 'toggle') {
+          updates[field.key] = true
+          updatedKeys.add(field.key)
+        }
+        continue
+      }
+
+      const coerced = coerceImportedValue(importedValue, field)
+      if (coerced === undefined) continue
+
+      updates[field.key] = coerced
+      updatedKeys.add(field.key)
+      break
+    }
+  }
+
+  if (updatedKeys.size > 0) {
+    Object.assign(config, updates)
+  }
+
+  return { updatedKeys: Array.from(updatedKeys) }
+}
+
+export function importEnvToConfig(content: string): ImportYamlResult {
+  const envValues = parseEnvObject(content)
+  const fields = allFields()
+  const updates: Record<string, any> = {}
+  const updatedKeys = new Set<string>()
+
+  for (const field of fields) {
+    if (!field.env || field.key.startsWith('_')) continue
+
+    const envRule = field.env
+    const rawValue = envValues[envRule.key]
+    if (rawValue === undefined) continue
+
+    if (envRule.static !== undefined) {
+      if (field.type === 'toggle') {
+        const boolValue = parseBooleanLike(rawValue)
+        if (boolValue === true || rawValue === envRule.static) {
+          updates[field.key] = true
+          updatedKeys.add(field.key)
+        }
+      }
+      continue
+    }
+
+    if (envRule.format === 'boolToFlag') {
+      const boolValue = parseBooleanLike(rawValue)
+      if (boolValue !== undefined) {
+        updates[field.key] = boolValue
+        updatedKeys.add(field.key)
+      }
+      continue
+    }
+
+    const coerced = coerceImportedValue(rawValue, field)
+    if (coerced === undefined) continue
+
+    updates[field.key] = coerced
+    updatedKeys.add(field.key)
+  }
+
+  if (updatedKeys.size > 0) {
+    Object.assign(config, updates)
+  }
+
+  return { updatedKeys: Array.from(updatedKeys) }
 }
 
 // --- Field to section mapping (for env comments) ---

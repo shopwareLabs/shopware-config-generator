@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { config } from '../config'
-import { schema, evaluateCondition, type Field } from '../schema'
-import { MtTextField, MtNumberField, MtTextarea, MtSelect, MtSwitch, MtCheckbox, MtCard } from '@shopware-ag/meteor-component-library'
+import { schema, evaluateCondition, type Field, type FieldGenerator } from '../schema'
+import { MtTextField, MtNumberField, MtTextarea, MtSelect, MtSwitch, MtCheckbox, MtCard, MtButton } from '@shopware-ag/meteor-component-library'
 import DomainRewrites from './fields/DomainRewrites.vue'
 import TagsInput from './fields/TagsInput.vue'
 
@@ -36,6 +36,34 @@ function toggleChecklist(key: string, value: string) {
 
 function isHiddenGroupTitle(title: string): boolean {
   return title.startsWith('_')
+}
+
+function getFieldGenerators(field: Field): FieldGenerator[] {
+  return field.generators || []
+}
+
+function generateRandomHex(length: number): string {
+  const safeLength = Math.max(1, Math.floor(length))
+  const bytes = new Uint8Array(Math.ceil(safeLength / 2))
+
+  if (typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.getRandomValues === 'function') {
+    globalThis.crypto.getRandomValues(bytes)
+  } else {
+    for (let i = 0; i < bytes.length; i++) {
+      bytes[i] = Math.floor(Math.random() * 256)
+    }
+  }
+
+  return Array.from(bytes)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, safeLength)
+}
+
+function runGenerator(field: Field, generator: FieldGenerator) {
+  if (generator.type === 'randomHex') {
+    config[field.key] = generateRandomHex(generator.length ?? 64)
+  }
 }
 </script>
 
@@ -84,14 +112,26 @@ function isHiddenGroupTitle(title: string): boolean {
                   />
 
                   <!-- Textarea -->
-                  <mt-textarea
-                    v-else-if="field.type === 'textarea'"
-                    :model-value="config[field.key]"
-                    :label="field.label"
-                    :help-text="field.hint"
-                    :placeholder="field.placeholder"
-                    @update:model-value="config[field.key] = $event"
-                  />
+                  <div v-else-if="field.type === 'textarea'" class="field-wrapper">
+                    <mt-textarea
+                      :model-value="config[field.key]"
+                      :label="field.label"
+                      :help-text="field.hint"
+                      :placeholder="field.placeholder"
+                      @update:model-value="config[field.key] = $event"
+                    />
+                    <div v-if="getFieldGenerators(field).length > 0" class="generator-actions">
+                      <mt-button
+                        v-for="(generator, index) in getFieldGenerators(field)"
+                        :key="`${field.key}-generator-${index}`"
+                        size="x-small"
+                        variant="secondary"
+                        @click="runGenerator(field, generator)"
+                      >
+                        {{ generator.label || 'Generate' }}
+                      </mt-button>
+                    </div>
+                  </div>
 
                   <!-- Checklist -->
                   <template v-else-if="field.type === 'checklist'">
@@ -121,14 +161,26 @@ function isHiddenGroupTitle(title: string): boolean {
                   </template>
 
                   <!-- Text (default) -->
-                  <mt-text-field
-                    v-else
-                    :model-value="config[field.key]"
-                    :label="field.label"
-                    :help-text="field.hint"
-                    :placeholder="field.placeholder"
-                    @update:model-value="config[field.key] = $event"
-                  />
+                  <div v-else class="field-wrapper">
+                    <mt-text-field
+                      :model-value="config[field.key]"
+                      :label="field.label"
+                      :help-text="field.hint"
+                      :placeholder="field.placeholder"
+                      @update:model-value="config[field.key] = $event"
+                    />
+                    <div v-if="getFieldGenerators(field).length > 0" class="generator-actions">
+                      <mt-button
+                        v-for="(generator, index) in getFieldGenerators(field)"
+                        :key="`${field.key}-generator-${index}`"
+                        size="x-small"
+                        variant="secondary"
+                        @click="runGenerator(field, generator)"
+                      >
+                        {{ generator.label || 'Generate' }}
+                      </mt-button>
+                    </div>
+                  </div>
                 </template>
               </template>
             </mt-card>
@@ -173,6 +225,12 @@ function isHiddenGroupTitle(title: string): boolean {
 
 .field-wrapper {
   margin-bottom: 16px;
+}
+
+.generator-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
 }
 
 .field-label {

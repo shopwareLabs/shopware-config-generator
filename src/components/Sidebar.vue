@@ -1,11 +1,15 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { getShareableUrl, resetConfig } from '../config'
-import { schema } from '../schema'
+import { importEnvToConfig, importYamlToConfig, schema } from '../schema'
 import { MtButton } from '@shopware-ag/meteor-component-library'
 
 const activeSection = defineModel<string>('activeSection', { required: true })
 const copied = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
+const directoryInput = ref<HTMLInputElement | null>(null)
+const importError = ref('')
+const importSuccess = ref('')
 
 interface NavGroup {
   title: string
@@ -44,6 +48,88 @@ function handleReset() {
     resetConfig()
   }
 }
+
+function clearImportMessages() {
+  importError.value = ''
+  importSuccess.value = ''
+}
+
+function getImportType(file: File): 'yaml' | 'env' | null {
+  const name = file.name.toLowerCase()
+  if (name.endsWith('.yml') || name.endsWith('.yaml')) {
+    return 'yaml'
+  }
+  if (name === '.env' || name.startsWith('.env.') || name.endsWith('.env')) {
+    return 'env'
+  }
+  return null
+}
+
+function openImportDialog() {
+  fileInput.value?.click()
+}
+
+function openImportDirectoryDialog() {
+  directoryInput.value?.click()
+}
+
+async function importYamlFiles(files: File[]) {
+  clearImportMessages()
+
+  const importableFiles = files
+    .map(file => ({ file, type: getImportType(file) }))
+    .filter((entry): entry is { file: File; type: 'yaml' | 'env' } => entry.type !== null)
+
+  if (importableFiles.length === 0) {
+    importError.value = 'No supported config files were found (.yaml, .yml, .env).'
+    return
+  }
+
+  const updatedKeys = new Set<string>()
+  const failedFiles: string[] = []
+
+  for (const { file, type } of importableFiles) {
+    try {
+      const content = await file.text()
+      const result = type === 'yaml'
+        ? importYamlToConfig(content, file.name)
+        : importEnvToConfig(content)
+      for (const key of result.updatedKeys) {
+        updatedKeys.add(key)
+      }
+    } catch {
+      failedFiles.push(file.name)
+    }
+  }
+
+  if (updatedKeys.size === 0) {
+    importError.value = `No matching fields were found in ${importableFiles.length} config file${importableFiles.length === 1 ? '' : 's'}.`
+    return
+  }
+
+  importSuccess.value = `Imported ${updatedKeys.size} field${updatedKeys.size === 1 ? '' : 's'} from ${importableFiles.length} config file${importableFiles.length === 1 ? '' : 's'}.`
+  if (failedFiles.length > 0) {
+    importError.value = `${failedFiles.length} file${failedFiles.length === 1 ? '' : 's'} could not be parsed.`
+  }
+}
+
+async function onFileChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+
+  await importYamlFiles([file])
+  target.value = ''
+}
+
+async function onDirectoryChange(event: Event) {
+  const target = event.target as HTMLInputElement
+  const files = target.files ? Array.from(target.files) : []
+  if (files.length === 0) return
+
+  await importYamlFiles(files)
+  target.value = ''
+}
 </script>
 
 <template>
@@ -70,6 +156,40 @@ function handleReset() {
     </nav>
 
     <div class="sidebar-actions">
+      <input
+        ref="fileInput"
+        type="file"
+        accept=".yaml,.yml,.env"
+        class="hidden-input"
+        @change="onFileChange"
+      />
+      <input
+        ref="directoryInput"
+        type="file"
+        accept=".yaml,.yml,.env"
+        multiple
+        webkitdirectory
+        class="hidden-input"
+        @change="onDirectoryChange"
+      />
+      <mt-button
+        variant="secondary"
+        block
+        size="small"
+        @click="openImportDialog"
+      >
+        Import Config File
+      </mt-button>
+      <mt-button
+        variant="secondary"
+        block
+        size="small"
+        @click="openImportDirectoryDialog"
+      >
+        Import Config Folder
+      </mt-button>
+      <p v-if="importSuccess" class="import-message import-success">{{ importSuccess }}</p>
+      <p v-if="importError" class="import-message import-error">{{ importError }}</p>
       <mt-button
         :variant="copied ? 'primary' : 'primary'"
         block
@@ -187,6 +307,23 @@ function handleReset() {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.import-message {
+  margin: 0;
+  font-size: 0.75rem;
+}
+
+.import-success {
+  color: #047857;
+}
+
+.import-error {
+  color: #b91c1c;
 }
 
 .action-icon {

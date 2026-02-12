@@ -65,10 +65,12 @@ const nodes = computed<PositionedNode[]>(() => {
     },
   ]
 
-  let rightColumnY = 80
   const rightColumnX = 500
   const spacing = 100
+  const infraCount = infraNodes.value.length
 
+  // Place infra nodes starting from top of right column
+  let rightColumnY = 80
   for (const node of infraNodes.value) {
     result.push({
       id: node.id,
@@ -82,10 +84,20 @@ const nodes = computed<PositionedNode[]>(() => {
     rightColumnY += spacing
   }
 
-  // Adjust MySQL position based on other services
+  // Position MySQL below all infra nodes so they never overlap
   const mysqlNode = result.find(n => n.id === 'mysql')!
-  if (rightColumnY > 180) {
-    mysqlNode.y = rightColumnY / 2
+  if (infraCount > 0) {
+    mysqlNode.y = rightColumnY
+  }
+
+  // Center Browser and Shopware vertically relative to right column
+  if (infraCount > 0) {
+    const rightYs = result.filter(n => n.x === rightColumnX).map(n => n.y)
+    const centerY = (Math.min(...rightYs) + Math.max(...rightYs)) / 2
+    const browserNode = result.find(n => n.id === 'browser')!
+    const shopwareNode = result.find(n => n.id === 'shopware')!
+    browserNode.y = centerY
+    shopwareNode.y = centerY
   }
 
   return result
