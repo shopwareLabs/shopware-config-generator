@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { infraNodes } from '../schema'
 import { MtCard } from '@shopware-ag/meteor-component-library'
+
+const expanded = ref(false)
 
 interface PositionedNode {
   id: string
@@ -167,116 +169,170 @@ function getConnectionLabelPosition(conn: Connection) {
 </script>
 
 <template>
-  <mt-card title="Infrastructure Overview">
-    <template #headerRight>
-      <span class="live-badge">Live</span>
-    </template>
-
-    <p class="infra-description">
-      Visual representation of your Shopware infrastructure based on current configuration.
-    </p>
-
-    <div class="svg-container">
-      <svg :width="svgWidth" :height="svgHeight" class="infra-svg">
-        <defs>
-          <marker
-            id="arrowhead"
-            markerWidth="10"
-            markerHeight="7"
-            refX="9"
-            refY="3.5"
-            orient="auto"
-          >
-            <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
-          </marker>
-        </defs>
-
-        <!-- Connections -->
-        <g v-for="conn in connections" :key="`${conn.from}-${conn.to}`">
-          <path
-            :d="getConnectionPath(conn)"
-            fill="none"
-            stroke="#4b5563"
-            stroke-width="2"
-            :stroke-dasharray="conn.dashed ? '5,5' : 'none'"
-            marker-end="url(#arrowhead)"
-          />
-          <text
-            :x="getConnectionLabelPosition(conn).x"
-            :y="getConnectionLabelPosition(conn).y"
-            class="conn-label"
-            text-anchor="middle"
-          >
-            {{ conn.label }}
-          </text>
-        </g>
-
-        <!-- Nodes -->
-        <g v-for="node in nodes" :key="node.id">
-          <rect
-            :x="node.x - 40"
-            :y="node.y - 30"
-            width="80"
-            height="60"
-            rx="8"
-            :fill="node.color"
-            fill-opacity="0.15"
-            :stroke="node.color"
-            stroke-width="2"
-          />
-
-          <svg
-            :x="node.x - 12"
-            :y="node.y - 22"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            :stroke="node.color"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path :d="node.icon" />
+  <mt-card>
+    <template #default>
+      <button class="infra-toggle" @click="expanded = !expanded">
+        <div class="infra-toggle-left">
+          <svg class="infra-toggle-chevron" :class="{ 'infra-toggle-chevron--collapsed': !expanded }" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 9l6 6 6-6"/>
           </svg>
+          <span class="infra-toggle-title">Infrastructure Overview</span>
+          <span class="live-badge">Live</span>
+        </div>
+        <span class="infra-toggle-hint">{{ expanded ? 'Collapse' : 'Expand' }}</span>
+      </button>
 
-          <text
-            :x="node.x"
-            :y="node.y + 18"
-            text-anchor="middle"
-            class="node-label"
-          >
-            {{ node.label }}
-          </text>
-        </g>
-      </svg>
-    </div>
+      <div v-show="expanded" class="infra-body">
+        <p class="infra-description">
+          Visual representation of your Shopware infrastructure based on current configuration.
+        </p>
 
-    <!-- Legend -->
-    <div class="legend">
-      <div class="legend-item">
-        <div class="legend-dot" style="background: #60a5fa"></div>
-        <span>Client</span>
+        <div class="svg-container">
+          <svg :width="svgWidth" :height="svgHeight" class="infra-svg">
+            <defs>
+              <marker
+                id="arrowhead"
+                markerWidth="10"
+                markerHeight="7"
+                refX="9"
+                refY="3.5"
+                orient="auto"
+              >
+                <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+              </marker>
+            </defs>
+
+            <!-- Connections -->
+            <g v-for="conn in connections" :key="`${conn.from}-${conn.to}`">
+              <path
+                :d="getConnectionPath(conn)"
+                fill="none"
+                stroke="#4b5563"
+                stroke-width="2"
+                :stroke-dasharray="conn.dashed ? '5,5' : 'none'"
+                marker-end="url(#arrowhead)"
+              />
+              <text
+                :x="getConnectionLabelPosition(conn).x"
+                :y="getConnectionLabelPosition(conn).y"
+                class="conn-label"
+                text-anchor="middle"
+              >
+                {{ conn.label }}
+              </text>
+            </g>
+
+            <!-- Nodes -->
+            <g v-for="node in nodes" :key="node.id">
+              <rect
+                :x="node.x - 40"
+                :y="node.y - 30"
+                width="80"
+                height="60"
+                rx="8"
+                :fill="node.color"
+                fill-opacity="0.15"
+                :stroke="node.color"
+                stroke-width="2"
+              />
+
+              <svg
+                :x="node.x - 12"
+                :y="node.y - 22"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                :stroke="node.color"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path :d="node.icon" />
+              </svg>
+
+              <text
+                :x="node.x"
+                :y="node.y + 18"
+                text-anchor="middle"
+                class="node-label"
+              >
+                {{ node.label }}
+              </text>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background: #60a5fa"></div>
+            <span>Client</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: #189eff"></div>
+            <span>Application</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: #f59e0b"></div>
+            <span>Database</span>
+          </div>
+          <div v-for="cat in activeCategories" :key="cat" class="legend-item">
+            <div class="legend-dot" :style="{ background: categoryColorMap[cat] || '#888' }"></div>
+            <span>{{ categoryLabelMap[cat] || cat }}</span>
+          </div>
+        </div>
       </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background: #189eff"></div>
-        <span>Application</span>
-      </div>
-      <div class="legend-item">
-        <div class="legend-dot" style="background: #f59e0b"></div>
-        <span>Database</span>
-      </div>
-      <div v-for="cat in activeCategories" :key="cat" class="legend-item">
-        <div class="legend-dot" :style="{ background: categoryColorMap[cat] || '#888' }"></div>
-        <span>{{ categoryLabelMap[cat] || cat }}</span>
-      </div>
-    </div>
+    </template>
   </mt-card>
 </template>
 
 <style scoped>
 :deep(.mt-card) {
   width: 100%;
+}
+
+.infra-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.infra-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.infra-toggle-chevron {
+  flex-shrink: 0;
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.infra-toggle-chevron--collapsed {
+  transform: rotate(-90deg);
+}
+
+.infra-toggle-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.infra-toggle-hint {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.infra-toggle:hover .infra-toggle-hint {
+  color: #6b7280;
 }
 
 .live-badge {
@@ -287,6 +343,10 @@ function getConnectionLabelPosition(conn: Connection) {
   border-radius: 4px;
   background: #189eff;
   color: #fff;
+}
+
+.infra-body {
+  margin-top: 16px;
 }
 
 .infra-description {

@@ -4,6 +4,15 @@ import { getShareableUrl, resetConfig } from '../config'
 import { importEnvToConfig, importYamlToConfig, schema } from '../schema'
 import { MtButton } from '@shopware-ag/meteor-component-library'
 
+defineProps<{
+  mobileOpen?: boolean
+}>()
+
+const emit = defineEmits<{
+  close: []
+  navigate: []
+}>()
+
 const activeSection = defineModel<string>('activeSection', { required: true })
 const copied = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -133,9 +142,18 @@ async function onDirectoryChange(event: Event) {
 </script>
 
 <template>
-  <aside class="sidebar">
-    <h1 class="sidebar-title">Shopware Config</h1>
-    <p class="sidebar-subtitle">Configuration Generator</p>
+  <aside class="sidebar" :class="{ 'sidebar--mobile-open': mobileOpen }">
+    <div class="sidebar-top">
+      <div>
+        <h1 class="sidebar-title">Shopware Config</h1>
+        <p class="sidebar-subtitle">Configuration Generator</p>
+      </div>
+      <button class="sidebar-close" @click="emit('close')" aria-label="Close menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
 
     <nav class="sidebar-nav">
       <div v-for="group in navGroups" :key="group.title" class="nav-group">
@@ -145,7 +163,7 @@ async function onDirectoryChange(event: Event) {
           :key="item.id"
           class="nav-item"
           :class="{ active: activeSection === item.id }"
-          @click="activeSection = item.id"
+          @click="activeSection = item.id; emit('navigate')"
         >
           <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.icon" />
@@ -232,6 +250,27 @@ async function onDirectoryChange(event: Event) {
   overflow: hidden;
 }
 
+.sidebar-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.sidebar-close {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #374151;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.sidebar-close:hover {
+  background: #f3f4f6;
+}
+
 .sidebar-title {
   font-size: 1.25rem;
   font-weight: 700;
@@ -242,7 +281,6 @@ async function onDirectoryChange(event: Event) {
 .sidebar-subtitle {
   font-size: 0.875rem;
   color: #6b7280;
-  margin-bottom: 24px;
 }
 
 .sidebar-nav {
@@ -330,5 +368,31 @@ async function onDirectoryChange(event: Event) {
   width: 16px;
   height: 16px;
   margin-right: 8px;
+}
+
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 400;
+    width: 300px;
+    max-width: 85vw;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: none;
+  }
+
+  .sidebar--mobile-open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-close {
+    display: block;
+  }
 }
 </style>

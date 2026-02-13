@@ -165,10 +165,13 @@ function runGenerator(field: Field, generator: FieldGenerator) {
                     <mt-text-field
                       :model-value="config[field.key]"
                       :label="field.label"
-                      :help-text="field.hint"
                       :placeholder="field.placeholder"
                       @update:model-value="config[field.key] = $event"
-                    />
+                    >
+                      <template v-if="field.hint" #hint>
+                        {{ field.hint }}
+                      </template>
+                    </mt-text-field>
                     <div v-if="getFieldGenerators(field).length > 0" class="generator-actions">
                       <mt-button
                         v-for="(generator, index) in getFieldGenerators(field)"
@@ -244,5 +247,19 @@ function runGenerator(field: Field, generator: FieldGenerator) {
   font-size: 0.75rem;
   color: #6b7280;
   margin-bottom: 8px;
+}
+
+@media (max-width: 767px) {
+  .config-panel {
+    padding: 20px 16px;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+  }
+
+  .section-description {
+    margin-bottom: 20px;
+  }
 }
 </style>
