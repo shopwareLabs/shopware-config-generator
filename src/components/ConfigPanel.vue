@@ -95,9 +95,12 @@ function runGenerator(field: Field, generator: FieldGenerator) {
                     :model-value="config[field.key]"
                     :options="field.options || []"
                     :label="field.label"
-                    :help-text="field.hint"
                     @update:model-value="config[field.key] = $event"
-                  />
+                  >
+                    <template v-if="field.hint" #hint>
+                      {{ field.hint }}
+                    </template>
+                  </mt-select>
 
                   <!-- Number -->
                   <mt-number-field
