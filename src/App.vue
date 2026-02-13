@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar.vue'
 import ConfigPanel from './components/ConfigPanel.vue'
 import OutputPanel from './components/OutputPanel.vue'
 import InfrastructureVisualization from './components/InfrastructureVisualization.vue'
+import RecommendationsPanel from './components/RecommendationsPanel.vue'
 
 const activeSection = ref('core')
 const showOutput = ref(window.innerWidth >= 1280)
@@ -45,6 +46,7 @@ const sidebarOpen = ref(false)
         <div class="infra-wrapper">
           <InfrastructureVisualization />
         </div>
+        <RecommendationsPanel />
         <ConfigPanel :key="activeSection" :section-id="activeSection" />
       </div>
       <div v-if="showOutput" class="output-area">
