@@ -32,6 +32,14 @@
               "hint": "The public URL where Shopware is accessible",
               "placeholder": "https://your-shop.com",
               "env": { "key": "APP_URL" }
+            },
+            {
+              "key": "appUrlCheckDisabled",
+              "type": "toggle",
+              "label": "Disable App URL Check",
+              "description": "Skip external HTTP check for APP_URL (recommended for production)",
+              "default": false,
+              "env": { "key": "APP_URL_CHECK_DISABLED", "format": "boolToFlag" }
             }
           ]
         },
@@ -87,6 +95,30 @@
               "description": "Sanitize HTML content for security",
               "default": true,
               "yaml": { "file": "shopware.yaml", "path": "shopware.html_sanitizer.enabled", "when": { "field": "htmlSanitizerEnabled", "eq": false } }
+            },
+            {
+              "key": "adminWorkerEnabled",
+              "type": "toggle",
+              "label": "Admin Worker",
+              "description": "Process queue messages via admin (disable in production)",
+              "default": false,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.admin_worker.enable_admin_worker", "when": { "field": "adminWorkerEnabled", "eq": true } }
+            },
+            {
+              "key": "mailVariablesOnSend",
+              "type": "toggle",
+              "label": "Update Mail Variables",
+              "description": "Update mail template variables on each send (disable for performance)",
+              "default": false,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.mail.update_mail_variables_on_send", "when": { "field": "mailVariablesOnSend", "eq": true } }
+            },
+            {
+              "key": "productStreamIndexing",
+              "type": "toggle",
+              "label": "Product Stream Indexing",
+              "description": "Enable product stream indexer (disable for performance on SW 6.6.10.5+)",
+              "default": false,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.product_stream.indexing", "when": { "field": "productStreamIndexing", "eq": false } }
             }
           ]
         },
@@ -211,6 +243,15 @@
               "hint": "Default cache time-to-live in seconds",
               "min": 0,
               "env": { "key": "SHOPWARE_HTTP_DEFAULT_TTL", "omitDefault": true }
+            },
+            {
+              "key": "cacheId",
+              "type": "text",
+              "label": "Cache ID",
+              "default": "",
+              "hint": "Fixed cache ID for consistent caching (SW 6.4.11-6.6.x)",
+              "placeholder": "my-cache-id",
+              "env": { "key": "SHOPWARE_CACHE_ID" }
             }
           ]
         },
@@ -261,6 +302,96 @@
                 { "value": "redis://localhost:6379", "label": "Redis" }
               ],
               "env": { "key": "LOCK_DSN", "omitDefault": true }
+            }
+          ]
+        },
+        {
+          "title": "Cache Performance",
+          "fields": [
+            {
+              "key": "cacheCompression",
+              "type": "toggle",
+              "label": "Enable Cache Compression",
+              "description": "Compress cache entries (SW 6.6.4+)",
+              "default": false,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.cache.cache_compression", "when": { "field": "cacheCompression", "eq": true } }
+            },
+            {
+              "key": "cacheCompressionMethod",
+              "type": "select",
+              "label": "Cache Compression Method",
+              "default": "gzip",
+              "hint": "Compression algorithm (zstd is faster, requires PHP extension)",
+              "showWhen": "cacheCompression",
+              "options": [
+                { "value": "gzip", "label": "Gzip" },
+                { "value": "zstd", "label": "Zstd (Recommended)" }
+              ],
+              "yaml": { "file": "shopware.yaml", "path": "shopware.cache.cache_compression_method", "when": "cacheCompression" }
+            },
+            {
+              "key": "cartCompression",
+              "type": "toggle",
+              "label": "Enable Cart Compression",
+              "description": "Compress cart data (SW 6.6.4+)",
+              "default": false,
+              "yaml": { "file": "shopware.yaml", "path": "shopware.cart.compress", "when": { "field": "cartCompression", "eq": true } }
+            },
+            {
+              "key": "cartCompressionMethod",
+              "type": "select",
+              "label": "Cart Compression Method",
+              "default": "gzip",
+              "hint": "Compression algorithm for cart",
+              "showWhen": "cartCompression",
+              "options": [
+                { "value": "gzip", "label": "Gzip" },
+                { "value": "zstd", "label": "Zstd (Recommended)" }
+              ],
+              "yaml": { "file": "shopware.yaml", "path": "shopware.cart.compression_method", "when": "cartCompression" }
+            },
+            {
+              "key": "fineGrainedCachingDisabled",
+              "type": "toggle",
+              "label": "Disable Fine-Grained Caching",
+              "description": "Disable fine-grained cache tagging for Redis/Varnish (SW 6.5.4-6.6.x)",
+              "default": false,
+              "yaml": [
+                { "file": "shopware.yaml", "path": "shopware.cache.tagging.each_config", "when": { "field": "fineGrainedCachingDisabled", "eq": true }, "value": false },
+                { "file": "shopware.yaml", "path": "shopware.cache.tagging.each_snippet", "when": { "field": "fineGrainedCachingDisabled", "eq": true }, "value": false },
+                { "file": "shopware.yaml", "path": "shopware.cache.tagging.each_theme_config", "when": { "field": "fineGrainedCachingDisabled", "eq": true }, "value": false }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Increment Storage",
+          "fields": [
+            {
+              "key": "incrementUserActivityType",
+              "type": "select",
+              "label": "User Activity Storage",
+              "default": "mysql",
+              "hint": "Storage for user activity increments (avoid mysql in production)",
+              "options": [
+                { "value": "mysql", "label": "MySQL" },
+                { "value": "array", "label": "Array (In-Memory)" },
+                { "value": "redis", "label": "Redis" }
+              ],
+              "yaml": { "file": "shopware.yaml", "path": "shopware.increment.user_activity.type", "when": { "field": "incrementUserActivityType", "neq": "mysql" } }
+            },
+            {
+              "key": "incrementMessageQueueType",
+              "type": "select",
+              "label": "Message Queue Storage",
+              "default": "mysql",
+              "hint": "Storage for message queue increments (avoid mysql in production)",
+              "options": [
+                { "value": "mysql", "label": "MySQL" },
+                { "value": "array", "label": "Array (In-Memory)" },
+                { "value": "redis", "label": "Redis" }
+              ],
+              "yaml": { "file": "shopware.yaml", "path": "shopware.increment.message_queue.type", "when": { "field": "incrementMessageQueueType", "neq": "mysql" } }
             }
           ]
         }
@@ -440,8 +571,8 @@
               "type": "text",
               "label": "Default Transport DSN",
               "default": "",
-              "hint": "DSN for the default async queue",
-              "placeholder": "amqp://guest:guest@localhost:5672/%2f/default",
+              "hint": "DSN for the default async queue (add ?auto_setup=false for production)",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/default?auto_setup=false",
               "env": { "key": "MESSENGER_TRANSPORT_DSN" },
               "infra": {
                 "id": "queue",
@@ -468,8 +599,8 @@
               "type": "text",
               "label": "Failure Transport DSN",
               "default": "",
-              "hint": "Queue for failed messages (dead letter queue)",
-              "placeholder": "amqp://guest:guest@localhost:5672/%2f/failure",
+              "hint": "Queue for failed messages (add ?auto_setup=false for production)",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/failure?auto_setup=false",
               "env": { "key": "MESSENGER_TRANSPORT_FAILURE_DSN" }
             },
             {
@@ -477,8 +608,8 @@
               "type": "text",
               "label": "Low Priority Transport DSN",
               "default": "",
-              "hint": "Queue for low priority background tasks",
-              "placeholder": "amqp://guest:guest@localhost:5672/%2f/low_prio",
+              "hint": "Queue for low priority background tasks (add ?auto_setup=false for production)",
+              "placeholder": "amqp://guest:guest@localhost:5672/%2f/low_prio?auto_setup=false",
               "env": { "key": "MESSENGER_TRANSPORT_LOW_PRIORITY_DSN" }
             }
           ]
@@ -651,6 +782,24 @@
               "hint": "Number of messages to buffer before flushing",
               "min": 1,
               "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.main.buffer_size", "when": "loggingEnabled" }
+            },
+            {
+              "key": "businessEventLoggerLevel",
+              "type": "select",
+              "label": "Business Event Logger Level",
+              "default": "warning",
+              "hint": "Minimum level for business event logging (use warning+ for production)",
+              "options": [
+                { "value": "debug", "label": "Debug" },
+                { "value": "info", "label": "Info" },
+                { "value": "notice", "label": "Notice" },
+                { "value": "warning", "label": "Warning" },
+                { "value": "error", "label": "Error" },
+                { "value": "critical", "label": "Critical" },
+                { "value": "alert", "label": "Alert" },
+                { "value": "emergency", "label": "Emergency" }
+              ],
+              "yaml": { "file": "monolog.yaml", "path": "monolog.handlers.business_event_handler_buffer.level", "when": "loggingEnabled" }
             }
           ]
         },
