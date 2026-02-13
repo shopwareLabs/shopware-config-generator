@@ -40,7 +40,6 @@ const activeSection = ref('core')
 
 .config-area {
   flex: 1;
-  overflow-y: auto;
   border-right: 1px solid #e5e7eb;
 }
 
@@ -53,5 +52,9 @@ const activeSection = ref('core')
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  align-self: flex-start;
 }
 </style>
