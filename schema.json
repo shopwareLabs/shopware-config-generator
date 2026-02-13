@@ -117,7 +117,7 @@
               "type": "toggle",
               "label": "Product Stream Indexing",
               "description": "Enable product stream indexer (disable for performance on SW 6.6.10.5+)",
-              "default": false,
+              "default": true,
               "yaml": { "file": "shopware.yaml", "path": "shopware.product_stream.indexing", "when": { "field": "productStreamIndexing", "eq": false } }
             }
           ]
